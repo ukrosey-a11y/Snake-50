@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>50 Levels Classic Snake Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #111; color: white; text-align: center; margin: 0; padding: 10px; }
+        h1 { margin: 5px 0; color: #4CAF50; font-size: 24px; }
+        #status-board { display: flex; justify-content: space-around; font-size: 18px; margin-bottom: 10px; background: #222; padding: 5px; border-radius: 5px; max-width: 400px; margin-left: auto; margin-right: auto; }
+        .stat { color: #fff; font-weight: bold; }
+        .stat span { color: #4CAF50; }
+        #game-container { display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        canvas { background-color: #1a1a1a; border: 4px solid #4CAF50; box-shadow: 0 0 20px rgba(76, 175, 80, 0.4); max-width: 100%; }
+        .ad-space { margin: 10px auto; width: 320px; height: 50px; background-color: #222; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #aaa; border: 1px dashed #444; }
+        .controls { display: grid; grid-template-columns: repeat(3, 60px); grid-gap: 10px; margin-top: 15px; justify-content: center; }
+        .btn { width: 60px; height: 60px; background-color: #4CAF50; color: white; border: none; border-radius: 10px; font-size: 20px; font-weight: bold; cursor: pointer; user-select: none; }
+        .btn:active { background-color: #45a049; }
+        .empty { visibility: hidden; }
+    </style>
+</head>
+<body>
+
+    <!-- TOP AD (Adsterra Code Yahan Paste Karein) -->
+    <div class="ad-space"><span>Adsterra Banner Ad (320x50)</span></div>
+
+    <h1>Snake: 50 Levels Challenge</h1>
+    
+    <div id="status-board">
+        <div class="stat">Score: <span id="score">0</span></div>
+        <div class="stat">Level: <span id="level">1</span><span style="color:#aaa;">/50</span></div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+    </div>
+
+    <!-- Mobile Control Buttons -->
+    <div class="controls">
+        <button class="btn empty"></button>
+        <button class="btn" onclick="changeDirection('UP')">▲</button>
+        <button class="btn empty"></button>
+        <button class="btn" onclick="changeDirection('LEFT')">◀</button>
+        <button class="btn" onclick="resetGame()" style="background-color: #2196F3;">🔄</button>
+        <button class="btn" onclick="changeDirection('RIGHT')">▶</button>
+        <button class="btn empty"></button>
+        <button class="btn" onclick="changeDirection('DOWN')">▼</button>
+    </div>
+
+    <!-- BOTTOM AD (Adsterra Code Yahan Paste Karein) -->
+    <div class="ad-space" style="margin-top:15px;"><span>Adsterra Banner Ad (320x50)</span></div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+        const levelElement = document.getElementById("level");
+        
+        const box = 20;
+        let snake, direction, food, score, level, gameSpeed, game, isGameOver, isPaused;
+        
+        function initGame() {
+            snake = [{ x: 10 * box, y: 10 * box }];
+            direction = "NONE"; 
+            score = 0;
+            level = 1;
+            gameSpeed = 160; // Starting slow speed
+            scoreElement.innerText = score;
+            levelElement.innerText = level;
+            isGameOver = false;
+            isPaused = true; 
+            generateFood();
+            startGameLoop();
+        }
+
+        function startGameLoop() {
+            if (game) clearInterval(game);
+            game = setInterval(draw, gameSpeed);
+        }
+
+        function generateFood() {
+            food = {
+                x: Math.floor(Math.random() * (canvas.width / box)) * box,
+                y: Math.floor(Math.random() * (canvas.height / box)) * box
+            };
+            // Food snake ke upar na generate ho
+            for (let part of snake) {
+                if (food.x === part.x && food.y === part.y) generateFood();
+            }
+        }
+
+        document.addEventListener("keydown", handleKeyPress);
+        function handleKeyPress(event) {
+            if (isGameOver) return;
+            if (event.keyCode == 37 && direction != "RIGHT") { direction = "LEFT"; isPaused = false; }
+            else if (event.keyCode == 38 && direction != "DOWN") { direction = "UP"; isPaused = false; }
+            else if (event.keyCode == 39 && direction != "LEFT") { direction = "RIGHT"; isPaused = false; }
+            else if (event.keyCode == 40 && direction != "UP") { direction = "DOWN"; isPaused = false; }
+        }
+
+        function changeDirection(newDir) {
+            if (isGameOver) return;
+            isPaused = false;
+            if (newDir === "LEFT" && direction !== "RIGHT") direction = "LEFT";
+            if (newDir === "UP" && direction !== "DOWN") direction = "UP";
+            if (newDir === "RIGHT" && direction !== "LEFT") direction = "RIGHT";
+            if (newDir === "DOWN" && direction !== "UP") direction = "DOWN";
+        }
+
+        function resetGame() { initGame(); }
+
+        function draw() {
+            ctx.fillStyle = "#1a1a1a";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Grid Lines (Design ke liye)
+            ctx.strokeStyle = "#222";
+            for(let i=0; i<canvas.width; i+=box) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+            }
+
+            // Snake Tail aur Head draw karein
+            for (let i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i === 0) ? "#4CAF50" : "#81C784";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                ctx.strokeStyle = "#1a1a1a";
+                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            }
+
+            // Food Draw Karein (Red Apple)
+            ctx.fillStyle = "#FF5722";
+            ctx.fillRect(food.x, food.y, box, box);
+            
+            // Welcome / Waiting Screen
+            if (isPaused && !isGameOver) {
+                ctx.fillStyle = "rgba(0,0,0,0.7)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = "#fff";
+                ctx.font = "20px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("🎮 Teer (Arrows) Daba Kar", canvas.width/2, 180);
+                ctx.fillText("Game Shuru Karein!", canvas.width/2, 220);
+                return;
+            }
+            
+            let snakeX = snake[0].x;
+            let snakeY = snake[0].y;
+            
+            if (direction == "LEFT") snakeX -= box;
+            if (direction == "UP") snakeY -= box;
+            if (direction == "RIGHT") snakeX += box;
+            if (direction == "DOWN") snakeY += box;
+            
+            // Agar Snake Khana Kha Le
+            if (snakeX == food.x && snakeY == food.y) {
+                score++;
+                scoreElement.innerText = score;
+                generateFood();
+                
+                // Level Up Logic (Har 2 score ke baad naya level up to 50)
+                if (score % 2 === 0 && level < 50) {
+                    level++;
+                    levelElement.innerText = level;
+                    // Har level par game ki speed thodi tez hogi
+                    gameSpeed = Math.max(40, 160 - (level * 2.4)); 
+                    startGameLoop();
+                }
+            } else {
+                snake.pop();
+            }
+
+            let newHead = { x: snakeX, y: snakeY };
+
+            // Game Over Conditions
+            if (snakeX < 0 || snakeX >= canvas.width || snakeY < 0 || snakeY >= canvas.height || collision(newHead, snake)) {
+                clearInterval(game);
+                isGameOver = true;
+                ctx.fillStyle = "rgba(0,0,0,0.85)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.fillStyle = "#FF5722";
+                ctx.font = "bold 36px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("GAME OVER", canvas.width/2, 160);
+                
+                ctx.fillStyle = "#fff";
+                ctx.font = "20px Arial";
+                ctx.fillText("Aap Level " + level + " Par Out Hue!", canvas.width/2, 210);
+                
+                ctx.fillStyle = "#2196F3";
+                ctx.fillText("🔄 Button Se Restart Krein", canvas.width/2, 260);
+                return;
+            }
+            
+            snake.unshift(newHead);
+        }
+
+        function collision(head, array) {
+            for (let i = 0; i < array.length; i++) {
+                if (head.x == array[i].x && head.y == array[i].y) return true;
+            }
+            return false;
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
